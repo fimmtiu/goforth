@@ -18,7 +18,7 @@ func compareTokens(t *testing.T, code string, tokens ...Token) {
 		if token != tokens[i] {
 			t.Errorf("Unexpected token: %v", token)
 		}
-		if token.TokenType == EOF {
+		if token.TokenType == EOF_TOKEN {
 			if i < len(tokens) - 1 {
 				t.Errorf("Not enough tokens! Next token should have been %v", tokens[i + 1])
 			}
@@ -28,19 +28,19 @@ func compareTokens(t *testing.T, code string, tokens ...Token) {
 }
 
 func TestEmptyInput(t *testing.T) {
-	compareTokens(t, "", Token{EOF, 0, ""})
+	compareTokens(t, "", Token{EOF_TOKEN, 0, ""})
 }
 
 func TestIntegers(t *testing.T) {
-	compareTokens(t, "1 31337 -7", Token{INTEGER, 1, ""}, Token{INTEGER, 31337, ""}, Token{INTEGER, -7, ""}, Token{EOF, 0, ""})
+	compareTokens(t, "1 31337 -7", Token{INTEGER_TOKEN, 1, ""}, Token{INTEGER_TOKEN, 31337, ""}, Token{INTEGER_TOKEN, -7, ""}, Token{EOF_TOKEN, 0, ""})
 }
 
 func TestIdentifiers(t *testing.T) {
-	compareTokens(t, "a A foo? ?bar - ", Token{FUNCALL, 0, "a"}, Token{FUNCALL, 0, "A"}, Token{FUNCALL, 0, "foo?"}, Token{FUNCALL, 0, "?bar"}, Token{FUNCALL, 0, "-"}, Token{EOF, 0, ""})
+	compareTokens(t, "a A foo? ?bar - ", Token{FUNCALL_TOKEN, 0, "a"}, Token{FUNCALL_TOKEN, 0, "A"}, Token{FUNCALL_TOKEN, 0, "foo?"}, Token{FUNCALL_TOKEN, 0, "?bar"}, Token{FUNCALL_TOKEN, 0, "-"}, Token{EOF_TOKEN, 0, ""})
 }
 
 func TestComments(t *testing.T) {
-	compareTokens(t, "2 ( I like pie ) .", Token{INTEGER, 2, ""}, Token{FUNCALL, 0, "."}, Token{EOF, 0, ""})
+	compareTokens(t, "2 ( I like pie ) .", Token{INTEGER_TOKEN, 2, ""}, Token{FUNCALL_TOKEN, 0, "."}, Token{EOF_TOKEN, 0, ""})
 }
 
 func TestUnboundedComment(t *testing.T) {
@@ -53,7 +53,7 @@ func TestUnboundedComment(t *testing.T) {
 	parser := NewParser(strings.NewReader("1 ( 2")) // Should panic with "No matching ')'" error
 	for {
 		token := parser.NextToken()
-		if token.TokenType == EOF {
+		if token.TokenType == EOF_TOKEN {
 			break
 		}
 	}
