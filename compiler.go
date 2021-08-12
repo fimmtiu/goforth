@@ -11,11 +11,44 @@ const (
 	OP_PRINT
 )
 
+const (
+  TYPE_VOID = iota
+	TYPE_INTEGER
+	TYPE_STRING
+)
+
+type Datum interface {
+	DataType() uint8
+}
+
+type IntegerDatum struct {
+	Int int64
+}
+
+type VoidDatum struct {}
+
+type StringDatum struct {
+	Str string
+}
+
+func (i VoidDatum) DataType() uint8 {
+	return TYPE_VOID
+}
+
+func (i IntegerDatum) DataType() uint8 {
+	return TYPE_INTEGER
+}
+
+func (i StringDatum) DataType() uint8 {
+	return TYPE_STRING
+}
+
 type Op struct {
 	Opcode uint8
 	Arg uint32
-	Token Token
+	Datum Datum
 }
+
 type Word struct {
 	Name string
 	Ops []Op
@@ -30,7 +63,7 @@ type Compiler struct {
 }
 
 func (w *Word) Finish() {
-	w.Ops = append(w.Ops, Op{OP_RETURN, 0, Token{}})
+	w.Ops = append(w.Ops, Op{OP_RETURN, 0, VoidDatum{}})
 }
 
 func NewCompiler(p *Parser) *Compiler {
@@ -66,12 +99,13 @@ func (c *Compiler) Compile(stopwords ...string) []Op {
 		switch token.TokenType {
 		case KEYWORD_TOKEN:
 			for _, stopword := range stopwords {
-				if token.String == stopword {
+				if token.Str == stopword {
 					c.UnreadToken(token)
 					return ops
 				}
 			}
-			switch token.String {
+
+			switch token.Str {
 			case ":":
 				c.compileWord()
 			case ";":
@@ -81,17 +115,21 @@ func (c *Compiler) Compile(stopwords ...string) []Op {
 			default:
 				panic(fmt.Sprintf("Unknown keyword: %v", token))
 			}
+
 		case INTEGER_TOKEN:
-			ops = append(ops, Op{OP_PUSH, 0, token})
+			ops = append(ops, Op{OP_PUSH, 0, IntegerDatum{token.Int}})
+
 		case FUNCALL_TOKEN:
-			switch token.String {
+			switch token.Str {
 			case ".":
-				ops = append(ops, Op{OP_PRINT, 0, Token{}})
+				ops = append(ops, Op{OP_PRINT, 0, VoidDatum{}})
 			default:
-				ops = append(ops, Op{OP_CALL, 0, token})
+				ops = append(ops, Op{OP_CALL, 0, StringDatum{token.Str}})
 			}
+
 		case EOF_TOKEN:
 			return ops
+
 		default:
 			panic(fmt.Sprintf("Unknown token type: %v", token))
 		}
@@ -109,12 +147,12 @@ func (c *Compiler) compileWord() {
 		panic(fmt.Sprintf("'%v' isn't a valid word name!", nameToken))
 	}
 
-	word := Word{nameToken.String, c.Compile(";")}
+	word := Word{nameToken.Str, c.Compile(";")}
 
 	// Consume the trailing ';' token
 	terminator := c.ReadToken()
-	if terminator.TokenType != KEYWORD_TOKEN || terminator.String != ";" {
-		panic(fmt.Sprintf("EOF during word definition for '%v'!", nameToken.String))
+	if terminator.TokenType != KEYWORD_TOKEN || terminator.Str != ";" {
+		panic(fmt.Sprintf("EOF during word definition for '%v'!", nameToken.Str))
 	}
 
 	word.Finish()

@@ -17,7 +17,7 @@ const (
 type Token struct {
   TokenType uint8
 	Int int64
-	String string
+	Str string
 }
 
 type Parser struct {
@@ -46,7 +46,7 @@ func (p *Parser) NextToken() Token {
 	case ":", ";", ")", "if", "then", "else":
 		return Token{KEYWORD_TOKEN, 0, s}
 	case "(":
-		for token := p.NextToken(); token.TokenType != KEYWORD_TOKEN || token.String != ")"; token = p.NextToken() {
+		for token := p.NextToken(); token.TokenType != KEYWORD_TOKEN || token.Str != ")"; token = p.NextToken() {
 			fmt.Printf("Skipping token: %v\n", token)
 			if token.TokenType == EOF_TOKEN {
 				panic("No matching ')' for '('!")

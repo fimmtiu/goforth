@@ -23,7 +23,7 @@ func compareOps(t *testing.T, code string, expected ...Op) {
 
 func TestWordCompile(t *testing.T) {
 	compareOps(t, ": foo 1 . ; foo",
-			Op{OP_CALL, 0, Token{FUNCALL_TOKEN, 0, "foo"}},
+			Op{OP_CALL, 0, StringDatum{"foo"}},
 	)
 }
 
@@ -45,4 +45,13 @@ func TestSpuriousSemicolon(t *testing.T) {
 
 func TestMissingSemicolon(t *testing.T) {
 	assertPanic(t, ": foo 1 .")
+}
+
+func TestCompile1(t *testing.T) {
+	compareOps(t, "foo ( bar ) 1 + .",
+			Op{OP_CALL, 0, StringDatum{"foo"}},
+			Op{OP_PUSH, 0, IntegerDatum{1}},
+			Op{OP_CALL, 0, StringDatum{"+"}},
+			Op{OP_PRINT, 0, VoidDatum{}},
+	)
 }
