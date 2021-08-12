@@ -57,8 +57,7 @@ func (c *Compiler) UnreadToken(t Token) {
 
 // FIXME: This function is long. Break it up?
 // FIXME: Actual error handling instead of panics.
-// FIXME: This is no longer a good name.
-func (c *Compiler) ReadExpressions(stopwords ...string) []Op {
+func (c *Compiler) Compile(stopwords ...string) []Op {
 	ops := []Op{}
 
 	for {
@@ -110,7 +109,7 @@ func (c *Compiler) compileWord() {
 		panic(fmt.Sprintf("'%v' isn't a valid word name!", nameToken))
 	}
 
-	word := Word{nameToken.String, c.ReadExpressions(";")}
+	word := Word{nameToken.String, c.Compile(";")}
 
 	// Consume the trailing ';' token
 	terminator := c.ReadToken()

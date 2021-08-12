@@ -9,7 +9,7 @@ func compareOps(t *testing.T, code string, expected ...Op) {
 	parser := NewParser(strings.NewReader(code))
 	compiler := NewCompiler(parser)
 
-	actual := compiler.ReadExpressions()
+	actual := compiler.Compile()
 	if len(actual) != len(expected) {
 		t.Errorf("Expected %d ops, but got %d instead", len(expected), len(actual))
 	}
@@ -36,7 +36,7 @@ func assertPanic(t *testing.T, code string) {
 
 	parser := NewParser(strings.NewReader(code))
 	compiler := NewCompiler(parser)
-	compiler.ReadExpressions()
+	compiler.Compile()
 }
 
 func TestSpuriousSemicolon(t *testing.T) {
