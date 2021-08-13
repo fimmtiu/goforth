@@ -189,12 +189,12 @@ func (c *Compiler) defineWord() {
 
 func (c *Compiler) compileIf() []AbstractOp {
 	ops := []AbstractOp{}
-	true_branch := c.Compile("else", "then")
-	false_branch := []AbstractOp{}
+	trueBranch := c.Compile("else", "then")
+	falseBranch := []AbstractOp{}
 
 	nextToken := c.parser.ReadToken()
 	if nextToken.TokenType == KEYWORD_TOKEN && nextToken.Str == "else" {
-		false_branch = c.Compile("then")
+		falseBranch = c.Compile("then")
 		nextToken = c.parser.ReadToken()
 	}
 
@@ -202,14 +202,14 @@ func (c *Compiler) compileIf() []AbstractOp {
 		panic("Improperly terminated 'if' statement!")
 	}
 
-	if len(false_branch) > 0 {
-		ops = append(ops, AbstractOp{OP_JUMP_IF_NOT, uint32(len(true_branch) + 2), VoidDatum{}})
-		ops = append(ops, true_branch...)
-		ops = append(ops, AbstractOp{OP_JUMP, uint32(len(false_branch) + 1), VoidDatum{}})
-		ops = append(ops, false_branch...)
+	if len(falseBranch) > 0 {
+		ops = append(ops, AbstractOp{OP_JUMP_IF_NOT, uint32(len(trueBranch) + 2), VoidDatum{}})
+		ops = append(ops, trueBranch...)
+		ops = append(ops, AbstractOp{OP_JUMP, uint32(len(falseBranch) + 1), VoidDatum{}})
+		ops = append(ops, falseBranch...)
 	} else {
-		ops = append(ops, AbstractOp{OP_JUMP_IF_NOT, uint32(len(true_branch) + 1), VoidDatum{}})
-		ops = append(ops, true_branch...)
+		ops = append(ops, AbstractOp{OP_JUMP_IF_NOT, uint32(len(trueBranch) + 1), VoidDatum{}})
+		ops = append(ops, trueBranch...)
 	}
 	return ops
 }
