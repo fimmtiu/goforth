@@ -55,6 +55,11 @@ func ExampleVirtualMachine_drop() {
 	// Output: 1
 }
 
+func ExampleVirtualMachine_and() {
+	runCode("3 1 and .")
+	// Output: 1
+}
+
 func ExampleVirtualMachine_zero_equal() {
 	runCodeWithBuiltins("0 0= . 1 0= .")
 	// Output: 10

@@ -151,6 +151,8 @@ func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
 				ops = append(ops, AbstractOp{OP_DUP, 1, VoidDatum{}})
 			case "drop":
 				ops = append(ops, AbstractOp{OP_DROP, 0, VoidDatum{}})
+			case "and":
+				ops = append(ops, AbstractOp{OP_AND, 0, VoidDatum{}})
 			default:
 				ops = append(ops, AbstractOp{OP_CALL, 0, StringDatum{token.Str}})
 			}

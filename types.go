@@ -12,6 +12,7 @@ const (
 	OP_MOD
 	OP_DUP
 	OP_DROP
+	OP_AND
 )
 
 const (
