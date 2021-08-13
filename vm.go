@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type VirtualMachine struct {
 	Heap []Datum
@@ -20,8 +22,8 @@ func NewVirtualMachine() *VirtualMachine {
 
 func (vm *VirtualMachine) Run() {
 	// fmt.Println("Code:")
-	// for _, op := range vm.Code {
-	// 	fmt.Printf("    %08x\n", op)
+	// for i, op := range vm.Code {
+	// 	fmt.Printf("    %02d: %08x\n", i, op)
 	// }
 
 	for {
@@ -47,11 +49,11 @@ func (vm *VirtualMachine) Run() {
 		case OP_PUSH:
 			vm.pushDataStack(vm.Heap[arg])
 		case OP_JUMP:
-			vm.ip = arg
+			vm.ip = arg - 1
 		case OP_JUMP_IF_NOT:
 			value := vm.popDataStack()
 			if value.DataType() == TYPE_INTEGER && value.(IntegerDatum).Int == 0 {
-				vm.ip = arg
+				vm.ip = arg - 1
 			}
 		}
 

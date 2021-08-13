@@ -76,7 +76,7 @@ func TestWordCompile(t *testing.T) {
 	}
 }
 
-func TestOpPacking(t *testing.T) {
+func TestWordOpPacking(t *testing.T) {
 	c := NewCompiler(NewVirtualMachine())
 	c.LoadCode(strings.NewReader(": foo 1 2 + ; foo ."))
 
@@ -101,12 +101,69 @@ func TestOpPacking(t *testing.T) {
 	})
 }
 
+func TestIfCompile(t *testing.T) {
+	compareOps(t, "1 if 2 then",
+			AbstractOp{OP_PUSH, 0, IntegerDatum{1}},
+			AbstractOp{OP_JUMP_IF_NOT, 2, VoidDatum{}},
+			AbstractOp{OP_PUSH, 0, IntegerDatum{2}},
+	)
+}
+
+func TestIfElseCompile(t *testing.T) {
+	compareOps(t, "1 if 2 else 3 then",
+			AbstractOp{OP_PUSH, 0, IntegerDatum{1}},
+			AbstractOp{OP_JUMP_IF_NOT, 3, VoidDatum{}},
+			AbstractOp{OP_PUSH, 0, IntegerDatum{2}},
+			AbstractOp{OP_JUMP, 2, VoidDatum{}},
+			AbstractOp{OP_PUSH, 0, IntegerDatum{3}},
+	)
+}
+
+func TestIfOpPacking(t *testing.T) {
+	c := NewCompiler(NewVirtualMachine())
+	c.LoadCode(strings.NewReader("1 if 2 then"))
+
+	assertPackedOpsEqual(t, c.vm.Code, []PackedOp{
+		0x00000002, // OP_PUSH 1
+		0x00000305, // OP_JUMP_IF_NOT 3
+		0x00000102, // OP_PUSH 2
+		0x00000001, // OP_RETURN
+	})
+}
+
+func TestIfElseOpPacking(t *testing.T) {
+	c := NewCompiler(NewVirtualMachine())
+	c.LoadCode(strings.NewReader("1 if 2 else 3 then"))
+
+	assertPackedOpsEqual(t, c.vm.Code, []PackedOp{
+		0x00000002, // OP_PUSH 1
+		0x00000405, // OP_JUMP_IF_NOT 4
+		0x00000102, // OP_PUSH 2
+		0x00000504, // OP_JUMP 5
+		0x00000202, // OP_PUSH 3
+		0x00000001, // OP_RETURN
+	})
+}
+
 func TestSpuriousSemicolon(t *testing.T) {
 	assertPanic(t, "; foo 1 . ;")
 }
 
 func TestMissingSemicolon(t *testing.T) {
 	assertPanic(t, ": foo 1 .")
+}
+
+func TestSpuriousElse(t *testing.T) {
+	assertPanic(t, "1 else .")
+}
+
+func TestSpuriousThen(t *testing.T) {
+	assertPanic(t, "1 then .")
+}
+
+func TestUnterminatedIf(t *testing.T) {
+	assertPanic(t, "1 if foo")
+	assertPanic(t, "1 if foo else bar")
 }
 
 func TestCompile1(t *testing.T) {

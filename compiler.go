@@ -51,8 +51,7 @@ func (c *Compiler) convertToPackedOp(word Word, op AbstractOp, opIndex int) Pack
 		offset = uint32(len(c.vm.Heap)) - 1
 
 	case OP_JUMP, OP_JUMP_IF_NOT:
-		relative_offset := op.Datum.(IntegerDatum).Int
-		offset = c.vm.Dict[word.Name] + uint32(opIndex) + uint32(relative_offset)
+		offset = c.vm.Dict[word.Name] + uint32(opIndex) + uint32(op.Arg)
 	}
 	return PackedOp(uint32(op.Opcode) | (offset << 8))
 }
@@ -107,7 +106,9 @@ func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
 			case ";":
 				panic("Can't use ';' outside of a word definition!")
 			case "if":
-				// FIXME not implemented yet
+				ops = append(ops, c.compileIf()...)
+			case "else", "then":
+				panic(fmt.Sprintf("Can't have '%s' without a matching 'if'!", token.Str))
 			default:
 				panic(fmt.Sprintf("Unknown keyword: %v", token))
 			}
@@ -156,4 +157,31 @@ func (c *Compiler) defineWord() {
 	word.Finish()
 	c.words = append(c.words, word)
 	c.compiling = false
+}
+
+func (c *Compiler) compileIf() []AbstractOp {
+	ops := []AbstractOp{}
+	true_branch := c.Compile("else", "then")
+	false_branch := []AbstractOp{}
+
+	nextToken := c.ReadToken()
+	if nextToken.TokenType == KEYWORD_TOKEN && nextToken.Str == "else" {
+		false_branch = c.Compile("then")
+		nextToken = c.ReadToken()
+	}
+
+	if nextToken.TokenType != KEYWORD_TOKEN || nextToken.Str != "then" {
+		panic("Improperly terminated 'if' statement!")
+	}
+
+	if len(false_branch) > 0 {
+		ops = append(ops, AbstractOp{OP_JUMP_IF_NOT, uint32(len(true_branch) + 2), VoidDatum{}})
+		ops = append(ops, true_branch...)
+		ops = append(ops, AbstractOp{OP_JUMP, uint32(len(false_branch) + 1), VoidDatum{}})
+		ops = append(ops, false_branch...)
+	} else {
+		ops = append(ops, AbstractOp{OP_JUMP_IF_NOT, uint32(len(true_branch) + 1), VoidDatum{}})
+		ops = append(ops, true_branch...)
+	}
+	return ops
 }
