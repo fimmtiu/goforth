@@ -35,7 +35,7 @@ func (c *Compiler) convertToPackedOp(word Word, op AbstractOp, opIndex int) Pack
 		word_name := op.Datum.(StringDatum).Str
 		op.Arg = c.vm.Dict[word_name]
 
-	case OP_PUSH:
+	case OP_PUSH, OP_STORE, OP_FETCH:
 		c.vm.Heap = append(c.vm.Heap, op.Datum)
 		op.Arg = uint32(len(c.vm.Heap)) - 1
 
@@ -87,7 +87,7 @@ func (c *Compiler) LoadCode(code io.Reader) {
 	c.parser = nil
 }
 
-// FIXME: This function is long. Break it up?
+// FIXME: This function is rather long. Break it up.
 // FIXME: Actual error handling instead of panics.
 func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
 	ops := []AbstractOp{}
@@ -124,23 +124,32 @@ func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
 			ops = append(ops, AbstractOp{OP_PUSH, 0, StringDatum{token.Str}})
 
 		case FUNCALL_TOKEN:
-			switch token.Str {
-			case ".":
-				ops = append(ops, AbstractOp{OP_PRINT, 0, VoidDatum{}})
-			case "+":
-				ops = append(ops, AbstractOp{OP_ADD, 0, VoidDatum{}})
-			case "mod":
-				ops = append(ops, AbstractOp{OP_MOD, 0, VoidDatum{}})
-			case "dup":
-				ops = append(ops, AbstractOp{OP_DUP, 0, VoidDatum{}})
-			case "over":
-				ops = append(ops, AbstractOp{OP_DUP, 1, VoidDatum{}})
-			case "drop":
-				ops = append(ops, AbstractOp{OP_DROP, 0, VoidDatum{}})
-			case "and":
-				ops = append(ops, AbstractOp{OP_AND, 0, VoidDatum{}})
-			default:
-				ops = append(ops, AbstractOp{OP_CALL, 0, StringDatum{token.Str}})
+			nextToken := c.parser.PeekToken() // I'm cheating!
+			if nextToken.TokenType == FUNCALL_TOKEN && nextToken.Str == "!" {
+				c.parser.ReadToken()
+				ops = append(ops, AbstractOp{OP_STORE, 0, StringDatum{token.Str}})
+			} else if nextToken.TokenType == FUNCALL_TOKEN && nextToken.Str == "@" {
+				c.parser.ReadToken()
+				ops = append(ops, AbstractOp{OP_FETCH, 0, StringDatum{token.Str}})
+			} else {
+				switch token.Str {
+				case ".":
+					ops = append(ops, AbstractOp{OP_PRINT, 0, VoidDatum{}})
+				case "+":
+					ops = append(ops, AbstractOp{OP_ADD, 0, VoidDatum{}})
+				case "mod":
+					ops = append(ops, AbstractOp{OP_MOD, 0, VoidDatum{}})
+				case "dup":
+					ops = append(ops, AbstractOp{OP_DUP, 0, VoidDatum{}})
+				case "over":
+					ops = append(ops, AbstractOp{OP_DUP, 1, VoidDatum{}})
+				case "drop":
+					ops = append(ops, AbstractOp{OP_DROP, 0, VoidDatum{}})
+				case "and":
+					ops = append(ops, AbstractOp{OP_AND, 0, VoidDatum{}})
+				default:
+					ops = append(ops, AbstractOp{OP_CALL, 0, StringDatum{token.Str}})
+				}
 			}
 
 		case EOF_TOKEN:

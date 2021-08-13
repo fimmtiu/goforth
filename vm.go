@@ -12,11 +12,13 @@ type VirtualMachine struct {
 
 	dataStack []Datum
 	callStack []uint32
+	variables map[string]Datum
 }
 
 func NewVirtualMachine() *VirtualMachine {
 	var vm VirtualMachine
 	vm.Dict = make(map[string]uint32)
+	vm.variables = make(map[string]Datum)
 	return &vm
 }
 
@@ -64,6 +66,12 @@ func (vm *VirtualMachine) Run() {
 			if value.DataType() == TYPE_INTEGER && value.(IntegerDatum).Int == 0 {
 				vm.Ip = arg - 1
 			}
+		case OP_STORE:
+			varName := vm.Heap[arg].(StringDatum).Str
+			vm.variables[varName] = vm.popDataStack()
+		case OP_FETCH:
+			varName := vm.Heap[arg].(StringDatum).Str
+			vm.pushDataStack(vm.variables[varName])
 		}
 
 		vm.Ip++

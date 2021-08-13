@@ -50,7 +50,7 @@ func assertPanic(t *testing.T, code string) {
 
 func assertPackedOpsEqual(t *testing.T, actual []PackedOp, expected []PackedOp) {
 	if len(actual) != len(expected) {
-		t.Errorf("Size mismatch for packed ops: expected %d but got %d", len(actual), len(expected))
+		t.Errorf("Size mismatch for packed ops: expected %d but got %d", len(expected), len(actual))
 	}
 
 	for i, op := range actual {
@@ -149,6 +149,19 @@ func TestIfElseOpPacking(t *testing.T) {
 		0x00000102, // OP_PUSH 2
 		0x00000504, // OP_JUMP 5
 		0x00000202, // OP_PUSH 3
+		0x00000001, // OP_RETURN
+	})
+}
+
+func TestStoreFetchOpPacking(t *testing.T) {
+	c := NewCompiler(NewVirtualMachine())
+	c.LoadCode(strings.NewReader("1 foo ! foo @"))
+	c.vm.printDisassembly()
+
+	assertPackedOpsEqual(t, c.vm.Code, []PackedOp{
+		0x00000002, // OP_PUSH 1
+		0x0000010c, // OP_STORE foo
+		0x0000020d, // OP_FETCH foo
 		0x00000001, // OP_RETURN
 	})
 }

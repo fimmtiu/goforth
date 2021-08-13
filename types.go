@@ -1,18 +1,20 @@
 package main
 
 const (
-	OP_INVALID uint8 = iota
-	OP_RETURN
-	OP_PUSH
-	OP_CALL
-	OP_JUMP
-	OP_JUMP_IF_NOT
-	OP_PRINT
-	OP_ADD
-	OP_MOD
-	OP_DUP
-	OP_DROP
-	OP_AND
+	OP_INVALID uint8 = iota   // 00
+	OP_RETURN                 // 01
+	OP_PUSH                   // 02
+	OP_CALL                   // 03
+	OP_JUMP                   // 04
+	OP_JUMP_IF_NOT            // 05
+	OP_PRINT                  // 06
+	OP_ADD                    // 07
+	OP_MOD                    // 08
+	OP_DUP                    // 09
+	OP_DROP                   // 0a
+	OP_AND                    // 0b
+	OP_STORE                  // 0c
+	OP_FETCH                  // 0d
 )
 
 var OpNames = []string{
@@ -28,6 +30,8 @@ var OpNames = []string{
 	"DUP",
 	"DROP",
 	"AND",
+	"STORE",
+	"FETCH",
 }
 
 const (
