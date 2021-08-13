@@ -166,12 +166,19 @@ func TestUnterminatedIf(t *testing.T) {
 	assertPanic(t, "1 if foo else bar")
 }
 
-func TestCompile1(t *testing.T) {
+func TestCompileAddition(t *testing.T) {
 	compareOps(t, "foo ( n1 n2 -- n' ) 1 2 + .",
 			AbstractOp{OP_CALL, 0, StringDatum{"foo"}},
 			AbstractOp{OP_PUSH, 0, IntegerDatum{1}},
 			AbstractOp{OP_PUSH, 0, IntegerDatum{2}},
 			AbstractOp{OP_ADD, 0, VoidDatum{}},
+			AbstractOp{OP_PRINT, 0, VoidDatum{}},
+	)
+}
+
+func TestCompilePrintString(t *testing.T) {
+	compareOps(t, `"foo" .`,
+			AbstractOp{OP_PUSH, 0, StringDatum{"foo"}},
 			AbstractOp{OP_PRINT, 0, VoidDatum{}},
 	)
 }

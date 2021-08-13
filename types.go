@@ -19,6 +19,7 @@ const (
 
 const (
 	INTEGER_TOKEN uint8 = iota
+	STRING_TOKEN
 	KEYWORD_TOKEN
 	FUNCALL_TOKEN
 	EOF_TOKEN

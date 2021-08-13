@@ -116,6 +116,9 @@ func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
 		case INTEGER_TOKEN:
 			ops = append(ops, AbstractOp{OP_PUSH, 0, IntegerDatum{token.Int}})
 
+		case STRING_TOKEN:
+			ops = append(ops, AbstractOp{OP_PUSH, 0, StringDatum{token.Str}})
+
 		case FUNCALL_TOKEN:
 			switch token.Str {
 			case ".":

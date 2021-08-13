@@ -16,7 +16,7 @@ func compareTokens(t *testing.T, code string, tokens ...Token) {
 			t.Errorf("Too many tokens! Extra token was %v", token)
 		}
 		if token != tokens[i] {
-			t.Errorf("Unexpected token: %v", token)
+			t.Errorf("Expected token %d to be %v, but it was %v", i, tokens[i], token)
 		}
 		if token.TokenType == EOF_TOKEN {
 			if i < len(tokens) - 1 {
@@ -33,6 +33,10 @@ func TestEmptyInput(t *testing.T) {
 
 func TestIntegers(t *testing.T) {
 	compareTokens(t, "1 31337 -7", Token{INTEGER_TOKEN, 1, ""}, Token{INTEGER_TOKEN, 31337, ""}, Token{INTEGER_TOKEN, -7, ""}, Token{EOF_TOKEN, 0, ""})
+}
+
+func TestStrings(t *testing.T) {
+	compareTokens(t, `"1" "" "foo"`, Token{STRING_TOKEN, 0, "1"}, Token{STRING_TOKEN, 0, ""}, Token{STRING_TOKEN, 0, "foo"}, Token{EOF_TOKEN, 0, ""})
 }
 
 func TestIdentifiers(t *testing.T) {

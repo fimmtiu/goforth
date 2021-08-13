@@ -10,6 +10,7 @@ type Parser struct {
 	scanner *bufio.Scanner
 }
 
+// FIXME: Actual string parser that handles spaces and escaped quotes in strings.
 func NewParser(data io.Reader) *Parser {
 	p := Parser{bufio.NewScanner(data)}
 	p.scanner.Split(bufio.ScanWords)
@@ -25,6 +26,10 @@ func (p *Parser) NextToken() Token {
 
 	if value, err := strconv.ParseInt(s, 10, 64); err == nil {
 		return Token{INTEGER_TOKEN, value, ""}
+	}
+
+	if s[0] == '"' && s[len(s)-1] == '"' {
+		return Token{STRING_TOKEN, 0, s[1:len(s)-1]}
 	}
 
 	switch s {
