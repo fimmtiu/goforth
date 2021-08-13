@@ -58,7 +58,9 @@ func (c *Compiler) LoadCode(code io.Reader) {
 	// Compile any code that's outside of word definitions.
 	topLevelWord := Word{"top-level code", []AbstractOp{}}
 	topLevelWord.Ops = c.Compile()
-	topLevelWord.Finish()
+	if len(topLevelWord.Ops) > 0 {
+		topLevelWord.Finish()
+	}
 	c.words = append(c.words, topLevelWord)
 
 	// Populate the dictionary with the starting offsets of each word in the code array.
