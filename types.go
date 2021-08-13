@@ -10,6 +10,7 @@ const (
 	OP_PRINT
 	OP_ADD
 	OP_MOD
+	OP_DUP
 )
 
 const (

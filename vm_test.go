@@ -35,6 +35,11 @@ func ExampleVirtualMachine_modulus2() {
 	// Output: 0
 }
 
+func ExampleVirtualMachine_dup() {
+	runCode("13 dup . .")
+	// Output: 1313
+}
+
 func ExampleVirtualMachine_if_then_true() {
 	runCode("31337 1 if . then")
 	// Output: 31337
