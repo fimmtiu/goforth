@@ -38,7 +38,7 @@ func TestStrings(t *testing.T) {
 }
 
 func TestIdentifiers(t *testing.T) {
-	compareTokens(t, "a A foo? ?bar - ", Token{FUNCALL_TOKEN, 0, "a"}, Token{FUNCALL_TOKEN, 0, "A"}, Token{FUNCALL_TOKEN, 0, "foo?"}, Token{FUNCALL_TOKEN, 0, "?bar"}, Token{FUNCALL_TOKEN, 0, "-"}, Token{EOF_TOKEN, 0, ""})
+	compareTokens(t, "a A 0= foo? ?bar - ", Token{FUNCALL_TOKEN, 0, "a"}, Token{FUNCALL_TOKEN, 0, "A"}, Token{FUNCALL_TOKEN, 0, "0="}, Token{FUNCALL_TOKEN, 0, "foo?"}, Token{FUNCALL_TOKEN, 0, "?bar"}, Token{FUNCALL_TOKEN, 0, "-"}, Token{EOF_TOKEN, 0, ""})
 }
 
 func TestComments(t *testing.T) {

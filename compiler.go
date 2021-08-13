@@ -9,6 +9,7 @@ import (
 const builtinWords = `
 	: cr "\n" . ;
 	: 2dup over over ;
+	: 0= if 0 else 1 then ;
 `
 
 type Compiler struct {
