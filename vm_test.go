@@ -50,6 +50,11 @@ func ExampleVirtualMachine_2dup() {
 	// Output: 2121
 }
 
+func ExampleVirtualMachine_drop() {
+	runCode("1 2 drop .")
+	// Output: 1
+}
+
 func ExampleVirtualMachine_if_then_true() {
 	runCode("31337 1 if . then")
 	// Output: 31337
