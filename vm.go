@@ -53,7 +53,7 @@ func (vm *VirtualMachine) Run() {
 		case OP_PUSH:
 			vm.pushDataStack(vm.Heap[arg])
 		case OP_DUP:
-			vm.pushDataStack(vm.dataStack[len(vm.dataStack)-1])
+			vm.pushDataStack(vm.dataStack[len(vm.dataStack) - int(arg) - 1])
 		case OP_JUMP:
 			vm.Ip = arg - 1
 		case OP_JUMP_IF_NOT:

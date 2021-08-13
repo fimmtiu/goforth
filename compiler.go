@@ -8,6 +8,7 @@ import (
 
 const builtinWords = `
 	: cr "\n" . ;
+	: 2dup over over ;
 `
 
 type Compiler struct {
@@ -45,21 +46,19 @@ func (c *Compiler) UnreadToken(t Token) {
 
 // The first byte of the uint32 is the opcode; the remaining 3 bytes are some sort of argument to the instruction.
 func (c *Compiler) convertToPackedOp(word Word, op AbstractOp, opIndex int) PackedOp {
-	var offset uint32 = 0
-
 	switch op.Opcode {
 	case OP_CALL:
 		word_name := op.Datum.(StringDatum).Str
-		offset = c.vm.Dict[word_name]
+		op.Arg = c.vm.Dict[word_name]
 
 	case OP_PUSH:
 		c.vm.Heap = append(c.vm.Heap, op.Datum)
-		offset = uint32(len(c.vm.Heap)) - 1
+		op.Arg = uint32(len(c.vm.Heap)) - 1
 
 	case OP_JUMP, OP_JUMP_IF_NOT:
-		offset = c.vm.Dict[word.Name] + uint32(opIndex) + uint32(op.Arg)
+		op.Arg = c.vm.Dict[word.Name] + uint32(opIndex) + uint32(op.Arg)
 	}
-	return PackedOp(uint32(op.Opcode) | (offset << 8))
+	return PackedOp(uint32(op.Opcode) | (op.Arg << 8))
 }
 
 // We don't want the builtins loaded during tests, so it's a separate method.
@@ -147,6 +146,8 @@ func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
 				ops = append(ops, AbstractOp{OP_MOD, 0, VoidDatum{}})
 			case "dup":
 				ops = append(ops, AbstractOp{OP_DUP, 0, VoidDatum{}})
+			case "over":
+				ops = append(ops, AbstractOp{OP_DUP, 1, VoidDatum{}})
 			default:
 				ops = append(ops, AbstractOp{OP_CALL, 0, StringDatum{token.Str}})
 			}

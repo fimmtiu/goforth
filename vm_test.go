@@ -40,6 +40,16 @@ func ExampleVirtualMachine_dup() {
 	// Output: 1313
 }
 
+func ExampleVirtualMachine_over() {
+	runCode("1 2 over . . .")
+	// Output: 121
+}
+
+func ExampleVirtualMachine_2dup() {
+	runCodeWithBuiltins("1 2 2dup . . . .")
+	// Output: 2121
+}
+
 func ExampleVirtualMachine_if_then_true() {
 	runCode("31337 1 if . then")
 	// Output: 31337
