@@ -11,6 +11,14 @@ func runCode(code string) {
 	vm.Run()
 }
 
+func runCodeWithBuiltins(code string) {
+	vm := NewVirtualMachine()
+	compiler := NewCompiler(vm)
+	compiler.LoadBuiltins()
+	compiler.LoadCode(strings.NewReader(code))
+	vm.Run()
+}
+
 func ExampleVirtualMachine_addition_and_printing() {
 	runCode(": foo ( -- n ) 1 2 + ; foo .")
 	// Output: 3
@@ -19,6 +27,13 @@ func ExampleVirtualMachine_addition_and_printing() {
 func ExampleVirtualMachine_if_then_true() {
 	runCode("31337 1 if . then")
 	// Output: 31337
+}
+
+func ExampleVirtualMachine_cr() {
+	runCodeWithBuiltins("1 . cr 2 .")
+	// Output:
+	// 1
+	// 2
 }
 
 func ExampleVirtualMachine_if_then_false() {

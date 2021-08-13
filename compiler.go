@@ -3,7 +3,12 @@ package main
 import (
 	"fmt"
 	"io"
+	"strings"
 )
+
+const builtinWords = `
+	: cr "\n" . ;
+`
 
 type Compiler struct {
 	parser *Parser
@@ -18,7 +23,8 @@ func (w *Word) Finish() {
 }
 
 func NewCompiler(vm *VirtualMachine) *Compiler {
-	return &Compiler{nil, vm, false, []Word{{"top-level code", []AbstractOp{}}}, nil}
+	c := Compiler{nil, vm, false, []Word{}, nil}
+	return &c
 }
 
 func (c *Compiler) ReadToken() Token {
@@ -56,12 +62,21 @@ func (c *Compiler) convertToPackedOp(word Word, op AbstractOp, opIndex int) Pack
 	return PackedOp(uint32(op.Opcode) | (offset << 8))
 }
 
+// We don't want the builtins loaded during tests, so it's a separate method.
+func (c *Compiler) LoadBuiltins() {
+	c.LoadCode(strings.NewReader(builtinWords))
+}
+
 // FIXME: Actual error handling
 // FIXME: I don't like that Compiler reaches into VM like this.
 func (c *Compiler) LoadCode(code io.Reader) {
 	c.parser = NewParser(code)
-	c.words[0].Ops = c.Compile()
-	c.words[0].Finish()
+
+	// Compile any code that's outside of word definitions.
+	topLevelWord := Word{"top-level code", []AbstractOp{}}
+	topLevelWord.Ops = c.Compile()
+	topLevelWord.Finish()
+	c.words = append(c.words, topLevelWord)
 
 	// Populate the dictionary with the starting offsets of each word in the code array.
 	var offset uint32 = uint32(len(c.vm.Code))
@@ -79,6 +94,9 @@ func (c *Compiler) LoadCode(code io.Reader) {
 		}
 		c.vm.Code = append(c.vm.Code, packedOps...)
 	}
+
+	// Set the initial instruction pointer for the VM
+	c.vm.Ip = c.vm.Dict[topLevelWord.Name]
 
 	c.parser = nil
 }

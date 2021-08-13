@@ -36,7 +36,7 @@ func TestIntegers(t *testing.T) {
 }
 
 func TestStrings(t *testing.T) {
-	compareTokens(t, `"1" "" "foo"`, Token{STRING_TOKEN, 0, "1"}, Token{STRING_TOKEN, 0, ""}, Token{STRING_TOKEN, 0, "foo"}, Token{EOF_TOKEN, 0, ""})
+	compareTokens(t, `"1" "" "\\n" "foo"`, Token{STRING_TOKEN, 0, "1"}, Token{STRING_TOKEN, 0, ""}, Token{STRING_TOKEN, 0, "\n"}, Token{STRING_TOKEN, 0, "foo"}, Token{EOF_TOKEN, 0, ""})
 }
 
 func TestIdentifiers(t *testing.T) {

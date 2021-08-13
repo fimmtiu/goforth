@@ -10,7 +10,7 @@ $ echo ': foo 1 2 + ; foo .' | ./goforth
 3
 ```
 
-It'll read Forth code from standard input. It's about as minimal a feature set as you can get: it can do `if else then`, `+`, `.`, user-defined words, and not much else. My goal was to get it to a point where it could run FizzBuzz.
+It'll read Forth code from standard input. It's about as minimal a feature set as you can get: it can do `if else then`, `+`, `.`, user-defined words, integers, weird idiosyncratic strings, and not much else. My goal was to get it to a point where it could run FizzBuzz.
 
 ## Notes
 

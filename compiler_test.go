@@ -65,14 +65,14 @@ func TestWordCompile(t *testing.T) {
 			AbstractOp{OP_CALL, 0, StringDatum{"foo"}},
 	)
 
-	if len(c.words) != 2 {
-		t.Errorf("Expected 2 words, but got %d", len(c.words))
+	if len(c.words) != 1 {
+		t.Errorf("Expected 1 word, but got %d", len(c.words))
 	}
 
 	foo := Word{"foo", []AbstractOp{{OP_PUSH, 0, IntegerDatum{1}}, {OP_PRINT, 0, VoidDatum{}}, {OP_RETURN, 0, VoidDatum{}}}}
 
-	if !wordsEqual(c.words[1], foo) {
-		t.Errorf("Expected newly defined word to be %v, but got %v", foo, c.words[1])
+	if !wordsEqual(c.words[0], foo) {
+		t.Errorf("Expected newly defined word to be %v, but got %v", foo, c.words[0])
 	}
 }
 
@@ -83,22 +83,26 @@ func TestWordOpPacking(t *testing.T) {
 	if len(c.vm.Dict) != 2 {
 		t.Errorf("Expected 2 entries in the dictionary, but got %d.", len(c.vm.Dict))
 	}
-	if c.vm.Dict["top-level code"] != 0 {
-		t.Errorf("Expected top-level code to start at offset 0, but it's at %d.", c.vm.Dict["top-level code"])
+	if c.vm.Dict["foo"] != 0 {
+		t.Errorf("Expected foo to start at offset 0, but it's at %d.", c.vm.Dict["foo"])
 	}
-	if c.vm.Dict["foo"] != 3 {
-		t.Errorf("Expected foo to start at offset 3, but it's at %d.", c.vm.Dict["foo"])
+	if c.vm.Dict["top-level code"] != 4 {
+		t.Errorf("Expected top-level code to start at offset 4, but it's at %d.", c.vm.Dict["top-level code"])
 	}
 
 	assertPackedOpsEqual(t, c.vm.Code, []PackedOp{
-		0x00000303, // OP_CALL 3  [start of top-level code]
-		0x00000006, // OP_PRINT
-		0x00000001, // OP_RETURN
 		0x00000002, // OP_PUSH 1  [start of foo]
 		0x00000102, // OP_PUSH 2
 		0x00000007, // OP_ADD
 		0x00000001, // OP_RETURN
+		0x00000003, // OP_CALL 0  [start of top-level code]
+		0x00000006, // OP_PRINT
+		0x00000001, // OP_RETURN
 	})
+
+	if c.vm.Ip != 4 {
+		t.Errorf("Expected instruction pointer to be 4, but got %d.", len(c.vm.Dict))
+	}
 }
 
 func TestIfCompile(t *testing.T) {
@@ -129,6 +133,10 @@ func TestIfOpPacking(t *testing.T) {
 		0x00000102, // OP_PUSH 2
 		0x00000001, // OP_RETURN
 	})
+
+	if c.vm.Ip != 0 {
+		t.Errorf("Expected instruction pointer to be 0, but got %d.", len(c.vm.Dict))
+	}
 }
 
 func TestIfElseOpPacking(t *testing.T) {

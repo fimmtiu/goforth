@@ -8,10 +8,10 @@ type VirtualMachine struct {
 	Heap []Datum
 	Dict map[string]uint32
 	Code []PackedOp
+	Ip uint32
 
 	dataStack []Datum
 	callStack []uint32
-	ip uint32
 }
 
 func NewVirtualMachine() *VirtualMachine {
@@ -27,10 +27,10 @@ func (vm *VirtualMachine) Run() {
 	// }
 
 	for {
-		instruction := vm.Code[vm.ip]
+		instruction := vm.Code[vm.Ip]
 		opcode := uint8(instruction & 0xFF)
 		arg := uint32(instruction >> 8)
-		// fmt.Printf("Executing: [%d] opcode %d, arg %d\n", vm.ip, opcode, arg)
+		// fmt.Printf("Executing: [%d] opcode %d, arg %d\n", vm.Ip, opcode, arg)
 
 		switch opcode {
 		case OP_PRINT:
@@ -39,25 +39,25 @@ func (vm *VirtualMachine) Run() {
 			result := addNumbers(vm.popDataStack(), vm.popDataStack())
 			vm.pushDataStack(result)
 		case OP_CALL:
-			vm.pushCallStack(vm.ip)
-			vm.ip = arg - 1
+			vm.pushCallStack(vm.Ip)
+			vm.Ip = arg - 1
 		case OP_RETURN:
 			if len(vm.callStack) == 0 {
 				return
 			}
-			vm.ip = vm.popCallStack()
+			vm.Ip = vm.popCallStack()
 		case OP_PUSH:
 			vm.pushDataStack(vm.Heap[arg])
 		case OP_JUMP:
-			vm.ip = arg - 1
+			vm.Ip = arg - 1
 		case OP_JUMP_IF_NOT:
 			value := vm.popDataStack()
 			if value.DataType() == TYPE_INTEGER && value.(IntegerDatum).Int == 0 {
-				vm.ip = arg - 1
+				vm.Ip = arg - 1
 			}
 		}
 
-		vm.ip++
+		vm.Ip++
 	}
 }
 
@@ -84,9 +84,9 @@ func (vm *VirtualMachine) popCallStack() uint32 {
 func printDatum(datum Datum) {
 	switch datum.DataType() {
 	case TYPE_INTEGER:
-		fmt.Printf("%d\n", datum.(IntegerDatum).Int)
+		fmt.Printf("%d", datum.(IntegerDatum).Int)
 	case TYPE_STRING:
-		fmt.Printf("%s\n", datum.(StringDatum).Str)
+		fmt.Printf("%s", datum.(StringDatum).Str)
 	default:
 		panic(fmt.Sprintf("Can't print datum: %v", datum))
 	}
