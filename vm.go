@@ -38,6 +38,10 @@ func (vm *VirtualMachine) Run() {
 		case OP_ADD:
 			result := addNumbers(vm.popDataStack(), vm.popDataStack())
 			vm.pushDataStack(result)
+		case OP_MOD:
+			mod_by, number := vm.popDataStack(), vm.popDataStack()
+			result := modNumbers(number, mod_by)
+			vm.pushDataStack(result)
 		case OP_CALL:
 			vm.pushCallStack(vm.Ip)
 			vm.Ip = arg - 1
@@ -97,4 +101,11 @@ func addNumbers(num1 Datum, num2 Datum) IntegerDatum {
 		panic("Can't add non-integer values!")
 	}
 	return IntegerDatum{num1.(IntegerDatum).Int + num2.(IntegerDatum).Int}
+}
+
+func modNumbers(num1 Datum, num2 Datum) IntegerDatum {
+	if num1.DataType() != TYPE_INTEGER || num2.DataType() != TYPE_INTEGER {
+		panic("Can't mod non-integer values!")
+	}
+	return IntegerDatum{num1.(IntegerDatum).Int % num2.(IntegerDatum).Int}
 }

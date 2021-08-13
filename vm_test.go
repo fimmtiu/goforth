@@ -24,6 +24,17 @@ func ExampleVirtualMachine_addition_and_printing() {
 	// Output: 3
 }
 
+
+func ExampleVirtualMachine_modulus1() {
+	runCode("3 2 mod .")
+	// Output: 1
+}
+
+func ExampleVirtualMachine_modulus2() {
+	runCode("6 2 mod .")
+	// Output: 0
+}
+
 func ExampleVirtualMachine_if_then_true() {
 	runCode("31337 1 if . then")
 	// Output: 31337

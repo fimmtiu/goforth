@@ -11,6 +11,7 @@ type Parser struct {
 }
 
 // FIXME: Actual string parser that handles spaces and escaped characters in strings.
+// FIXME: Words are currently case-sensitive, but should not be.
 func NewParser(data io.Reader) *Parser {
 	p := Parser{bufio.NewScanner(data)}
 	p.scanner.Split(bufio.ScanWords)

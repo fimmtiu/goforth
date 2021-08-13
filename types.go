@@ -9,6 +9,7 @@ const (
 	OP_JUMP_IF_NOT
 	OP_PRINT
 	OP_ADD
+	OP_MOD
 )
 
 const (
