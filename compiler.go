@@ -17,7 +17,6 @@ type Compiler struct {
 	vm *VirtualMachine
   compiling bool
 	words []Word
-	pushedBackToken *Token
 }
 
 func (w *Word) Finish() {
@@ -25,24 +24,8 @@ func (w *Word) Finish() {
 }
 
 func NewCompiler(vm *VirtualMachine) *Compiler {
-	c := Compiler{nil, vm, false, []Word{}, nil}
+	c := Compiler{nil, vm, false, []Word{}}
 	return &c
-}
-
-func (c *Compiler) ReadToken() Token {
-  if c.pushedBackToken != nil {
-		token := c.pushedBackToken
-		c.pushedBackToken = nil
-		return *token
-	}
-	return c.parser.NextToken()
-}
-
-func (c *Compiler) UnreadToken(t Token) {
-	if c.pushedBackToken != nil {
-		panic(fmt.Sprintf("WTF: Token %v already pushed, but tried to push %v", *c.pushedBackToken, t))
-	}
-	c.pushedBackToken = &t
 }
 
 // The first byte of the uint32 is the opcode; the remaining 3 bytes are some sort of argument to the instruction.
@@ -108,13 +91,13 @@ func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
 	ops := []AbstractOp{}
 
 	for {
-		token := c.ReadToken()
+		token := c.parser.ReadToken()
 
 		switch token.TokenType {
 		case KEYWORD_TOKEN:
 			for _, stopword := range stopwords {
 				if token.Str == stopword {
-					c.UnreadToken(token)
+					c.parser.UnreadToken(token)
 					return ops
 				}
 			}
@@ -173,7 +156,7 @@ func (c *Compiler) defineWord() {
 	}
 	c.compiling = true
 
-	nameToken := c.ReadToken()
+	nameToken := c.parser.ReadToken()
 	if nameToken.TokenType != FUNCALL_TOKEN {
 		panic(fmt.Sprintf("'%v' isn't a valid word name!", nameToken))
 	}
@@ -181,7 +164,7 @@ func (c *Compiler) defineWord() {
 	word := Word{nameToken.Str, c.Compile(";")}
 
 	// Consume the trailing ';' token
-	terminator := c.ReadToken()
+	terminator := c.parser.ReadToken()
 	if terminator.TokenType != KEYWORD_TOKEN || terminator.Str != ";" {
 		panic(fmt.Sprintf("EOF during word definition for '%v'!", nameToken.Str))
 	}
@@ -196,10 +179,10 @@ func (c *Compiler) compileIf() []AbstractOp {
 	true_branch := c.Compile("else", "then")
 	false_branch := []AbstractOp{}
 
-	nextToken := c.ReadToken()
+	nextToken := c.parser.ReadToken()
 	if nextToken.TokenType == KEYWORD_TOKEN && nextToken.Str == "else" {
 		false_branch = c.Compile("then")
-		nextToken = c.ReadToken()
+		nextToken = c.parser.ReadToken()
 	}
 
 	if nextToken.TokenType != KEYWORD_TOKEN || nextToken.Str != "then" {

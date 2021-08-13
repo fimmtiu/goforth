@@ -9,7 +9,7 @@ func compareTokens(t *testing.T, code string, tokens ...Token) {
 	parser := NewParser(strings.NewReader(code))
 
 	for i := 0 ;; i++ {
-		token := parser.NextToken()
+		token := parser.ReadToken()
 		if i >= len(tokens) {
 			t.Errorf("Too many tokens! Extra token was %v", token)
 		}
@@ -54,9 +54,30 @@ func TestUnboundedComment(t *testing.T) {
 
 	parser := NewParser(strings.NewReader("1 ( 2")) // Should panic with "No matching ')'" error
 	for {
-		token := parser.NextToken()
+		token := parser.ReadToken()
 		if token.TokenType == EOF_TOKEN {
 			break
 		}
+	}
+}
+
+func TestPeekToken(t *testing.T) {
+	parser := NewParser(strings.NewReader("a b"))
+	a, b := Token{FUNCALL_TOKEN, 0, "a"}, Token{FUNCALL_TOKEN, 0, "b"}
+
+	if token := parser.PeekToken(); token != a {
+		t.Errorf("Expected a, got %v", token)
+	}
+	if token := parser.PeekToken(); token != a {
+		t.Errorf("Expected a, got %v", token)
+	}
+	if token := parser.ReadToken(); token != a {
+		t.Errorf("Expected a, got %v", token)
+	}
+	if token := parser.PeekToken(); token != b {
+		t.Errorf("Expected b, got %v", token)
+	}
+	if token := parser.ReadToken(); token != b {
+		t.Errorf("Expected b, got %v", token)
 	}
 }
