@@ -58,7 +58,7 @@ func (vm *VirtualMachine) Run() {
 		case OP_DUP:
 			vm.pushDataStack(vm.dataStack[len(vm.dataStack) - int(arg) - 1])
 		case OP_DROP:
-			vm.popDataStack()
+			vm.dataStack = vm.dataStack[:len(vm.dataStack) - int(arg)]
 		case OP_JUMP:
 			vm.Ip = arg - 1
 		case OP_JUMP_IF_NOT:
@@ -124,7 +124,7 @@ func (vm *VirtualMachine) printDisassembly() {
 		  fmt.Printf("%s @ 0x%02x", target, arg)
 		case OP_JUMP, OP_JUMP_IF_NOT:
 		  fmt.Printf("%04x", arg)
-		case OP_DUP:
+		case OP_DUP, OP_DROP:
 		  fmt.Print(arg)
 		}
 

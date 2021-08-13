@@ -144,7 +144,9 @@ func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
 				case "over":
 					ops = append(ops, AbstractOp{OP_DUP, 1, VoidDatum{}})
 				case "drop":
-					ops = append(ops, AbstractOp{OP_DROP, 0, VoidDatum{}})
+					ops = append(ops, AbstractOp{OP_DROP, 1, VoidDatum{}})
+				case "2drop":
+					ops = append(ops, AbstractOp{OP_DROP, 2, VoidDatum{}})
 				case "and":
 					ops = append(ops, AbstractOp{OP_AND, 0, VoidDatum{}})
 				default:
