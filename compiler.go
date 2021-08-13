@@ -98,6 +98,7 @@ func (c *Compiler) LoadCode(code io.Reader) {
 	// Set the initial instruction pointer for the VM
 	c.vm.Ip = c.vm.Dict[topLevelWord.Name]
 
+	c.words = c.words[:0]
 	c.parser = nil
 }
 

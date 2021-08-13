@@ -21,10 +21,7 @@ func NewVirtualMachine() *VirtualMachine {
 }
 
 func (vm *VirtualMachine) Run() {
-	// fmt.Println("Code:")
-	// for i, op := range vm.Code {
-	// 	fmt.Printf("    %02d: %08x\n", i, op)
-	// }
+	// vm.printDisassembly()
 
 	for {
 		instruction := vm.Code[vm.Ip]
@@ -34,7 +31,7 @@ func (vm *VirtualMachine) Run() {
 
 		switch opcode {
 		case OP_PRINT:
-			printDatum(vm.popDataStack())
+			printDatum(vm.popDataStack(), false)
 		case OP_ADD:
 			result := addNumbers(vm.popDataStack(), vm.popDataStack())
 			vm.pushDataStack(result)
@@ -93,12 +90,55 @@ func (vm *VirtualMachine) popCallStack() uint32 {
 	return address
 }
 
-func printDatum(datum Datum) {
+func (vm *VirtualMachine) printDisassembly() {
+	fmt.Println("Code disassembly:")
+	for i, instruction := range vm.Code {
+		opcode := uint8(instruction & 0xFF)
+		arg := uint32(instruction >> 8)
+
+		if uint32(i) == vm.Ip {
+			fmt.Print("  IP> ")
+		} else {
+			fmt.Print("      ")
+		}
+		fmt.Printf("%04x: %08x   | %12s ", i, instruction, OpNames[opcode])
+
+		switch opcode {
+		case OP_PUSH:
+		  printDatum(vm.Heap[arg], true)
+		case OP_CALL:
+			target := "<unknown routine>"
+			for wordName, offset := range vm.Dict {
+				if arg == offset {
+					target = wordName
+				}
+			}
+		  fmt.Printf("%s @ 0x%02x", target, arg)
+		case OP_JUMP, OP_JUMP_IF_NOT:
+		  fmt.Printf("%04x", arg)
+		case OP_DUP:
+		  fmt.Print(arg)
+		}
+
+		for wordName, offset := range vm.Dict {
+			if uint32(i) == offset {
+				fmt.Printf("   [%s]", wordName)
+			}
+		}
+		fmt.Println("")
+	}
+}
+
+func printDatum(datum Datum, escaped bool) {
 	switch datum.DataType() {
 	case TYPE_INTEGER:
 		fmt.Printf("%d", datum.(IntegerDatum).Int)
 	case TYPE_STRING:
-		fmt.Printf("%s", datum.(StringDatum).Str)
+		if escaped {
+			fmt.Printf("%#v", datum.(StringDatum).Str)
+		} else {
+			fmt.Printf("%s", datum.(StringDatum).Str)
+		}
 	default:
 		panic(fmt.Sprintf("Can't print datum: %v", datum))
 	}

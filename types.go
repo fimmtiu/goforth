@@ -15,6 +15,21 @@ const (
 	OP_AND
 )
 
+var OpNames = []string{
+	"INVALID",
+	"RETURN",
+	"PUSH",
+	"CALL",
+	"JUMP",
+	"JUMP_IF_NOT",
+	"PRINT",
+	"ADD",
+	"MOD",
+	"DUP",
+	"DROP",
+	"AND",
+}
+
 const (
   TYPE_VOID uint8 = iota
 	TYPE_INTEGER
