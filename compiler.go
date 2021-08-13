@@ -1,75 +1,24 @@
 package main
 
-import "fmt"
-
-const (
-	OP_RETURN uint8 = iota
-	OP_PUSH
-	OP_CALL
-	OP_JUMP
-	OP_JUMP_IF_NOT
-	OP_PRINT
+import (
+	"fmt"
+	"io"
 )
-
-const (
-  TYPE_VOID = iota
-	TYPE_INTEGER
-	TYPE_STRING
-)
-
-type Datum interface {
-	DataType() uint8
-}
-
-type IntegerDatum struct {
-	Int int64
-}
-
-type VoidDatum struct {}
-
-type StringDatum struct {
-	Str string
-}
-
-func (i VoidDatum) DataType() uint8 {
-	return TYPE_VOID
-}
-
-func (i IntegerDatum) DataType() uint8 {
-	return TYPE_INTEGER
-}
-
-func (i StringDatum) DataType() uint8 {
-	return TYPE_STRING
-}
-
-type Op struct {
-	Opcode uint8
-	Arg uint32
-	Datum Datum
-}
-
-type Word struct {
-	Name string
-	Ops []Op
-}
 
 type Compiler struct {
 	parser *Parser
-	// vm VirtualMachine
+	vm *VirtualMachine
   compiling bool
 	words []Word
 	pushedBackToken *Token
 }
 
 func (w *Word) Finish() {
-	w.Ops = append(w.Ops, Op{OP_RETURN, 0, VoidDatum{}})
+	w.Ops = append(w.Ops, AbstractOp{OP_RETURN, 0, VoidDatum{}})
 }
 
-func NewCompiler(p *Parser) *Compiler {
-	return &Compiler{
-		p, false, []Word{}, nil,
-	}
+func NewCompiler(vm *VirtualMachine) *Compiler {
+	return &Compiler{nil, vm, false, []Word{{"top-level code", []AbstractOp{}}}, nil}
 }
 
 func (c *Compiler) ReadToken() Token {
@@ -88,10 +37,57 @@ func (c *Compiler) UnreadToken(t Token) {
 	c.pushedBackToken = &t
 }
 
+// The first byte of the uint32 is the opcode; the remaining 3 bytes are some sort of argument to the instruction.
+func (c *Compiler) convertToPackedOp(word Word, op AbstractOp, opIndex int) PackedOp {
+	var offset uint32 = 0
+
+	switch op.Opcode {
+	case OP_CALL:
+		word_name := op.Datum.(StringDatum).Str
+		offset = c.vm.Dict[word_name]
+
+	case OP_PUSH:
+		c.vm.Heap = append(c.vm.Heap, op.Datum)
+		offset = uint32(len(c.vm.Heap)) - 1
+
+	case OP_JUMP, OP_JUMP_IF_NOT:
+		relative_offset := op.Datum.(IntegerDatum).Int
+		offset = c.vm.Dict[word.Name] + uint32(opIndex) + uint32(relative_offset)
+	}
+	return PackedOp(uint32(op.Opcode) | (offset << 8))
+}
+
+// FIXME: Actual error handling
+// FIXME: I don't like that Compiler reaches into VM like this.
+func (c *Compiler) LoadCode(code io.Reader) {
+	c.parser = NewParser(code)
+	c.words[0].Ops = c.Compile()
+	c.words[0].Finish()
+
+	// Populate the dictionary with the starting offsets of each word in the code array.
+	var offset uint32 = uint32(len(c.vm.Code))
+	for _, word := range c.words {
+		c.vm.Dict[word.Name] = offset
+		offset += uint32(len(word.Ops))
+	}
+
+	// Convert all the AbstractOps to PackedOps and store them in the VM.
+	for _, word := range c.words {
+		packedOps := []PackedOp{}
+
+		for i, op := range word.Ops {
+			packedOps = append(packedOps, c.convertToPackedOp(word, op, i))
+		}
+		c.vm.Code = append(c.vm.Code, packedOps...)
+	}
+
+	c.parser = nil
+}
+
 // FIXME: This function is long. Break it up?
 // FIXME: Actual error handling instead of panics.
-func (c *Compiler) Compile(stopwords ...string) []Op {
-	ops := []Op{}
+func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
+	ops := []AbstractOp{}
 
 	for {
 		token := c.ReadToken()
@@ -107,7 +103,7 @@ func (c *Compiler) Compile(stopwords ...string) []Op {
 
 			switch token.Str {
 			case ":":
-				c.compileWord()
+				c.defineWord()
 			case ";":
 				panic("Can't use ';' outside of a word definition!")
 			case "if":
@@ -117,14 +113,16 @@ func (c *Compiler) Compile(stopwords ...string) []Op {
 			}
 
 		case INTEGER_TOKEN:
-			ops = append(ops, Op{OP_PUSH, 0, IntegerDatum{token.Int}})
+			ops = append(ops, AbstractOp{OP_PUSH, 0, IntegerDatum{token.Int}})
 
 		case FUNCALL_TOKEN:
 			switch token.Str {
 			case ".":
-				ops = append(ops, Op{OP_PRINT, 0, VoidDatum{}})
+				ops = append(ops, AbstractOp{OP_PRINT, 0, VoidDatum{}})
+			case "+":
+				ops = append(ops, AbstractOp{OP_ADD, 0, VoidDatum{}})
 			default:
-				ops = append(ops, Op{OP_CALL, 0, StringDatum{token.Str}})
+				ops = append(ops, AbstractOp{OP_CALL, 0, StringDatum{token.Str}})
 			}
 
 		case EOF_TOKEN:
@@ -136,7 +134,7 @@ func (c *Compiler) Compile(stopwords ...string) []Op {
 	}
 }
 
-func (c *Compiler) compileWord() {
+func (c *Compiler) defineWord() {
 	if c.compiling {
 		panic("Can't nest word definitions!")
 	}

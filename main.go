@@ -2,13 +2,13 @@ package main
 
 import (
 	"bufio"
-	"fmt"
-	"log"
 	"os"
 )
 
 func main() {
-	log.Println("Hello World!")
-	parser := NewParser(bufio.NewReader(os.Stdin))
-	fmt.Println(parser.NextToken())
+	vm := NewVirtualMachine()
+	compiler := NewCompiler(vm)
+
+	compiler.LoadCode(bufio.NewReader(os.Stdin))
+	vm.Run()
 }
