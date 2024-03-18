@@ -62,7 +62,7 @@ func (p *Parser) nextToken() Token {
 	}
 
 	switch s {
-	case ":", ";", ")", "if", "then", "else":
+	case ":", ";", ")", "if", "then", "else", "do", "loop":
 		return Token{KEYWORD_TOKEN, 0, s}
 	case "(":
 		for token := p.ReadToken(); token.TokenType != KEYWORD_TOKEN || token.Str != ")"; token = p.ReadToken() {

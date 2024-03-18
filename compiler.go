@@ -113,6 +113,10 @@ func (c *Compiler) Compile(stopwords ...string) []AbstractOp {
 				ops = append(ops, c.compileIf()...)
 			case "else", "then":
 				panic(fmt.Sprintf("Can't have '%s' without a matching 'if'!", token.Str))
+			case "do":
+				ops = append(ops, c.compileLoop()...)
+			case "loop":
+				panic("Can't have 'loop' without a matching 'do'!")
 			default:
 				panic(fmt.Sprintf("Unknown keyword: %v", token))
 			}
@@ -211,5 +215,31 @@ func (c *Compiler) compileIf() []AbstractOp {
 		ops = append(ops, AbstractOp{OP_JUMP_IF_NOT, uint32(len(trueBranch) + 1), VoidDatum{}})
 		ops = append(ops, trueBranch...)
 	}
+	return ops
+}
+
+func (c *Compiler) compileLoop() []AbstractOp {
+	ops := []AbstractOp{}
+	loopContents := c.Compile("loop")
+
+	nextToken := c.parser.ReadToken()
+	if nextToken.TokenType != KEYWORD_TOKEN || nextToken.Str != "loop" {
+		panic("Improperly terminated 'do' statement!")
+	}
+
+	// Push stop point, start point, current value of 'i' onto loop stack
+	// Each time through the loop:
+	//   Set 'i' to the current start point
+	//   <Run loop code>
+	//   If i != stop point
+	//     Jump back to loop top ("Set 'i'...")
+	//   Else
+	//     Pop start and stop from the loop stack
+	//     Set 'i' back to previous value
+
+	ops = append(ops, AbstractOp{OP_LOOP_START, 0, VoidDatum{}})
+	ops = append(ops, loopContents...)
+	ops = append(ops, AbstractOp{OP_LOOP_END, 0, VoidDatum{}})
+
 	return ops
 }
